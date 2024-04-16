@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Land Animal Quiz</title>
+</head>
+<style type="text/css">
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f2f2f2;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        margin-bottom: 20px;
+        color: #333;
+        text-align: center;
+    }
+
+    .question {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .options button {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        margin-bottom: 10px;
+        font-size: 16px;
+        background-color: #000;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .options button:hover {
+        background-color: #333;
+    }
+
+    .result {
+        font-size: 20px;
+        margin-top: 20px;
+    }
+
+    .actionButton {
+        display: none;
+        margin: 20px auto;
+        padding: 10px 20px;
+        font-size: 18px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .actionButton:hover {
+        background-color: #0056b3;
+    }
+
+    #progress {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
+<body>
+
+<audio id="audio_correct" src="img/interface-124464.mp3"></audio>
+<audio id="audio_wrong" src="img/error-4-199275.mp3"></audio>
+<div class="container">
+    <h1>Land Animal Quiz</h1>
+    <div class="question" id="question"></div>
+    <div class="options" id="options"></div>
+    <div class="result" id="result"></div>
+    <div id="progress">Progress: <span id="completed">0</span>/<span id="total"></span></div>
+    <button id="confirmButton" class="actionButton">Confirm</button>
+    <button id="nextButton" class="actionButton">Next</button>
+</div>
+
+<script>
+    const questions = [
+        {
+            question: "Which animal is known as the 'King of the Jungle'?",
+            options: ["Tiger", "Lion", "Elephant", "Giraffe"],
+            answer: "Lion",
+            used: false
+        },
+        {
+            question: "Which animal is the largest member of the cat family?",
+            options: ["Lion", "Tiger", "Leopard", "Cheetah"],
+            answer: "Tiger",
+            used: false
+        },
+        {
+            question: "Which animal is known for its solitary nature and distinctive black mane?",
+            options: ["Tiger", "Lion", "Jaguar", "Leopard"],
+            answer: "Jaguar",
+            used: false
+        },
+        {
+            question: "Which animal is the national symbol of India?",
+            options: ["Elephant", "Tiger", "Lion", "Leopard"],
+            answer: "Tiger",
+            used: false
+        },
+        {
+            question: "Which animal is known for its endurance and ability to run long distances?",
+            options: ["Tiger", "Lion", "Leopard", "Cheetah"],
+            answer: "Cheetah",
+            used: false
+        },
+        {
+            question: "Which animal has the scientific name 'Panthera leo'?",
+            options: ["Tiger", "Lion", "Jaguar", "Leopard"],
+            answer: "Lion",
+            used: false
+        },
+        {
+            question: "Which animal has the highest bite force among big cats?",
+            options: ["Lion", "Tiger", "Jaguar", "Leopard"],
+            answer: "Jaguar",
+            used: false
+        },
+        {
+            question: "Which animal is known for its ability to mimic human speech?",
+            options: ["Tiger", "Lion", "Jaguar", "Leopard"],
+            answer: "Jaguar",
+            used: false
+        },
+        {
+            question: "Which animal is known for its strong sense of smell and ability to climb trees?",
+            options: ["Tiger", "Lion", "Jaguar", "Leopard"],
+            answer: "Leopard",
+            used: false
+        },
+        {
+            question: "Which animal is known as the 'Ship of the Desert'?",
+            options: ["Camel", "Elephant", "Horse", "Giraffe"],
+            answer: "Camel",
+            used: false
+        },
+        {
+            question: "Which animal is the fastest land animal?",
+            options: ["Cheetah", "Lion", "Tiger", "Gazelle"],
+            answer: "Cheetah",
+            used: false
+        },
+        {
+            question: "Which animal is known for its ability to change color?",
+            options: ["Chameleon", "Gecko", "Iguana", "Komodo Dragon"],
+            answer: "Chameleon",
+            used: false
+        },
+        {
+            question: "Which animal is the largest land mammal?",
+            options: ["Elephant", "Hippo", "Rhinoceros", "Giraffe"],
+            answer: "Elephant",
+            used: false
+        },
+        {
+            question: "Which animal is known for its long neck?",
+            options: ["Giraffe", "Horse", "Zebra", "Camel"],
+            answer: "Giraffe",
+            used: false
+        }
+    ];
+
+    let score = 0;
+    let currentQuestion = null;
+    let completedQuestions = 0;
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function getRandomQuestion() {
+        const unusedQuestions = questions.filter(question => !question.used);
+        if (unusedQuestions.length === 0) {
+            // Reset used flag for all questions
+            questions.forEach(question => question.used = false);
+            completedQuestions = 0;
+            return getRandomQuestion(); // If all questions have been used, reset and get a new question
+        }
+        const randomIndex = Math.floor(Math.random() * unusedQuestions.length);
+        const randomQuestion = unusedQuestions[randomIndex];
+        randomQuestion.used = true;
+        return randomQuestion;
+    }
+
+    function displayQuestion() {
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+
+        currentQuestion = getRandomQuestion();
+
+        questionElement.textContent = currentQuestion.question;
+
+        optionsElement.innerHTML = '';
+
+        shuffle(currentQuestion.options).forEach((option) => {
+            const button = document.createElement('button');
+            button.textContent = option;
+            button.onclick = () => selectAnswer(option);
+            optionsElement.appendChild(button);
+        });
+
+        document.getElementById('confirmButton').style.display = 'block';
+        document.getElementById('nextButton').style.display = 'none';
+        document.getElementById('progress').textContent = `Progress: ${completedQuestions}/${questions.length}`;
+    }
+
+    function selectAnswer(selectedOption) {
+        const resultElement = document.getElementById('result');
+        const audio_correct = document.getElementById('audio_correct');
+        const audio_wrong = document.getElementById('audio_wrong');
+
+        if (selectedOption === currentQuestion.answer) {
+            score += 100 / questions.length;
+            audio_correct.play(); // Play correct audio
+            resultElement.textContent = "Correct!";
+        } else {
+            resultElement.textContent = "Incorrect. The correct answer is: " + currentQuestion.answer;
+            audio_wrong.play(); // Play wrong audio
+        }
+
+        completedQuestions++;
+        document.getElementById('progress').textContent = `Progress: ${completedQuestions}/${questions.length}`;
+        document.getElementById('confirmButton').style.display = 'none';
+        document.getElementById('nextButton').style.display = 'block';
+    }
+
+    function startNextQuestion() {
+        document.getElementById('nextButton').style.display = 'none'; // Hide the Next button
+        document.getElementById('result').textContent = ''; // Clear the result text
+        displayQuestion(); // Display the next question
+    }
+
+    window.onload = displayQuestion;
+    document.getElementById('confirmButton').addEventListener('click', () => {
+        selectAnswer();
+        document.getElementById('confirmButton').style.display = 'none';
+    });
+    document.getElementById('nextButton').addEventListener('click', startNextQuestion);
+</script>
+
+</body>
+</html>
