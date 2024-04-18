@@ -1,3 +1,7 @@
+
+
+
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -80,6 +84,11 @@
         text-align: center;
         margin-bottom: 20px;
     }
+
+    #score {
+        text-align: center;
+        margin-bottom: 20px;
+    }
 </style>
 <body>
 
@@ -91,8 +100,10 @@
     <div class="options" id="options"></div>
     <div class="result" id="result"></div>
     <div id="progress">Progress: <span id="completed">0</span>/<span id="total"></span></div>
+    <div id="score">Score: <span id="currentScore">0</span>/100</div>
     <button id="confirmButton" class="actionButton">Confirm</button>
     <button id="nextButton" class="actionButton">Next</button>
+    <button id="againButton" class="actionButton" style="display:none;">Again</button>
 </div>
 
 <script>
@@ -180,7 +191,7 @@
             options: ["Giraffe", "Horse", "Zebra", "Camel"],
             answer: "Giraffe",
             used: false
-        }
+        },
     ];
 
     let score = 0;
@@ -198,10 +209,10 @@
     function getRandomQuestion() {
         const unusedQuestions = questions.filter(question => !question.used);
         if (unusedQuestions.length === 0) {
-            // Reset used flag for all questions
+            // 重置所有问题的已用标志
             questions.forEach(question => question.used = false);
             completedQuestions = 0;
-            return getRandomQuestion(); // If all questions have been used, reset and get a new question
+            return getRandomQuestion(); // 如果所有问题都已使用，重置并获取新问题
         }
         const randomIndex = Math.floor(Math.random() * unusedQuestions.length);
         const randomQuestion = unusedQuestions[randomIndex];
@@ -229,6 +240,7 @@
         document.getElementById('confirmButton').style.display = 'block';
         document.getElementById('nextButton').style.display = 'none';
         document.getElementById('progress').textContent = `Progress: ${completedQuestions}/${questions.length}`;
+        document.getElementById('score').textContent = `Score: ${score.toFixed(2)}/100`;
     }
 
     function selectAnswer(selectedOption) {
@@ -238,23 +250,35 @@
 
         if (selectedOption === currentQuestion.answer) {
             score += 100 / questions.length;
-            audio_correct.play(); // Play correct audio
+            audio_correct.play(); // 正确音效
             resultElement.textContent = "Correct!";
         } else {
             resultElement.textContent = "Incorrect. The correct answer is: " + currentQuestion.answer;
-            audio_wrong.play(); // Play wrong audio
+            audio_wrong.play(); // 错误音效
         }
 
         completedQuestions++;
         document.getElementById('progress').textContent = `Progress: ${completedQuestions}/${questions.length}`;
+        document.getElementById('score').textContent = `Score: ${score.toFixed(2)}/100`;
         document.getElementById('confirmButton').style.display = 'none';
         document.getElementById('nextButton').style.display = 'block';
+
+        if (completedQuestions === questions.length) {
+            document.getElementById('againButton').style.display = 'block';
+        }
     }
 
     function startNextQuestion() {
-        document.getElementById('nextButton').style.display = 'none'; // Hide the Next button
+        document.getElementById('nextButton').style.display = 'none'; // 隐藏“next”
         document.getElementById('result').textContent = ''; // Clear the result text
-        displayQuestion(); // Display the next question
+        displayQuestion(); // 显示下一道问题
+    }
+
+    function restartQuiz() {
+        score = 0;
+        completedQuestions = 0;
+        document.getElementById('againButton').style.display = 'none';
+        displayQuestion();
     }
 
     window.onload = displayQuestion;
@@ -263,6 +287,7 @@
         document.getElementById('confirmButton').style.display = 'none';
     });
     document.getElementById('nextButton').addEventListener('click', startNextQuestion);
+    document.getElementById('againButton').addEventListener('click', restartQuiz);
 </script>
 
 </body>
